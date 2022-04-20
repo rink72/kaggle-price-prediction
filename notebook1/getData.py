@@ -15,7 +15,9 @@ instruments = [
   "EURJPY",
   "GBPUSD",
   "AUDCHF",
-  "BTCUSD"
+  "BTCUSD",
+  "TSLA",
+  "XAUUSD"
 ]
 granularities = [
   "M5",
