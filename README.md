@@ -28,6 +28,8 @@ This notebook is my own creation where I will try and investigate the following:
 - ATR - Predict the upcoming ATR
 - Volume - Predict the upcoming volume
 - Trade entries - manually create a dataset where entering trades would be profitable and see if the model can learn from that. Guess this would be a classification model? -1 -> sell, 0 no action, 1 -> buy?
+- Situations where the price moves more than a specifed amount in the next n candles but never goes in the reverse direction more than a certain amount in the opposite direction.
+  - ie. The price moves up 3 ATR in the next 3 candles but never goes more than 1 ATR in the reverse direction in that time. This could help with entries and knowing that you won't get stopped out even though you've picked the right direction
 ### Some indicator ideas
 
 - The basic/obvious ones that you can find when you google indicators on the internet. They are all available in [pandas_ta](https://github.com/twopirllc/pandas-ta)
