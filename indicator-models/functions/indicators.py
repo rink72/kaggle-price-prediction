@@ -21,6 +21,8 @@ def AddIndicators(data: pd.DataFrame) -> pd.DataFrame:
   updatedData = AddMOMData(data=updatedData)
   updatedData = AddPGOData(data=updatedData)
   updatedData = AddPPOData(data=updatedData)
+  updatedData = AddPSLData(data=updatedData)
+  updatedData = AddROCData(data=updatedData)
 
   return updatedData
 
@@ -367,5 +369,57 @@ def AddPPOIndicator(data: pd.DataFrame, fast: int, slow: int, signal: int) -> pd
 
   updatedData["bear_signal_{0}".format(ppoKey)] = (updatedData[ppoKey] < updatedData[ppoSKey]) & \
     (updatedData[ppoKey].shift(1) > updatedData[ppoSKey].shift(1))
+
+  return updatedData
+
+def AddPSLData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  pslRange = [6, 12, 20]
+
+  for pr in pslRange:
+    updatedData = AddPSLIndicator(data=updatedData, psl=pr)
+
+  return updatedData
+
+def AddPSLIndicator(data: pd.DataFrame, psl: int) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  key = "psl_{0}".format(psl)
+
+  psl = ta.psl(updatedData['midClose'], length=psl)
+  updatedData[key] = psl
+
+  updatedData["bull_signal_{0}".format(key)] = (updatedData[key] > 50) & \
+    (updatedData[key].shift(1) <= 50)
+
+  updatedData["bear_signal_{0}".format(key)] = (updatedData[key] < 50) & \
+    (updatedData[key].shift(1) >= 50)
+
+  return updatedData
+
+def AddROCData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  rocRange = [3, 6, 9, 12]
+
+  for rr in rocRange:
+    updatedData = AddROCIndicator(data=updatedData, roc=rr)
+
+  return updatedData
+
+def AddROCIndicator(data: pd.DataFrame, roc: int):
+  updatedData = data.copy()
+
+  key = "roc_{0}".format(roc)
+
+  roc = ta.roc(updatedData['midClose'], roc)
+  updatedData[key] = roc
+
+  updatedData["bull_signal_{0}".format(key)] = (updatedData[key] > 0) & \
+    (updatedData[key].shift(1) <= 0)
+
+  updatedData["bear_signal_{0}".format(key)] = (updatedData[key] < 0) & \
+    (updatedData[key].shift(1) >= 0)
 
   return updatedData
