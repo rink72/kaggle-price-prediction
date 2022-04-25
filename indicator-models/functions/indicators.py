@@ -23,6 +23,8 @@ def AddIndicators(data: pd.DataFrame) -> pd.DataFrame:
   updatedData = AddPPOData(data=updatedData)
   updatedData = AddPSLData(data=updatedData)
   updatedData = AddROCData(data=updatedData)
+  updatedData = AddRSIData(data=updatedData)
+  updatedData = AddSlopeData(data=updatedData)
 
   return updatedData
 
@@ -415,6 +417,58 @@ def AddROCIndicator(data: pd.DataFrame, roc: int):
 
   roc = ta.roc(updatedData['midClose'], roc)
   updatedData[key] = roc
+
+  updatedData["bull_signal_{0}".format(key)] = (updatedData[key] > 0) & \
+    (updatedData[key].shift(1) <= 0)
+
+  updatedData["bear_signal_{0}".format(key)] = (updatedData[key] < 0) & \
+    (updatedData[key].shift(1) >= 0)
+
+  return updatedData
+
+def AddRSIData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  rsiRange = [7, 14, 21]
+
+  for rr in rsiRange:
+    updatedData = AddRSIIndicator(data=updatedData, rsi=rr)
+
+  return updatedData
+
+def AddRSIIndicator(data: pd.DataFrame, rsi: int) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  key = "rsi_{0}".format(rsi)
+
+  rsi = ta.rsi(updatedData['midClose'], rsi)
+  updatedData[key] = rsi
+
+  updatedData["bull_signal_{0}".format(key)] = (updatedData[key] > 30) & \
+    (updatedData[key].shift(1) <= 30)
+
+  updatedData["bear_signal_{0}".format(key)] = (updatedData[key] < 70) & \
+    (updatedData[key].shift(1) >= 70)
+
+  return updatedData
+
+def AddSlopeData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  slopeRange = [1, 5, 10]
+
+  for sr in slopeRange:
+    updatedData = AddSlopeIndicator(data=updatedData, slope=sr)
+
+  return updatedData
+
+def AddSlopeIndicator(data: pd.DataFrame, slope: int) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  key = "slope_{0}".format(slope)
+
+  slope = ta.slope(updatedData['midClose'], slope)
+  updatedData[key] = slope
 
   updatedData["bull_signal_{0}".format(key)] = (updatedData[key] > 0) & \
     (updatedData[key].shift(1) <= 0)
