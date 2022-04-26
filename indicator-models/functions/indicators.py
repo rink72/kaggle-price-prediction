@@ -31,6 +31,14 @@ def AddIndicators(data: pd.DataFrame) -> pd.DataFrame:
   updatedData = AddATRData(data=updatedData)
 
   # Trend indicators
+  updatedData = AddAroonData(data=updatedData)
+  updatedData = AddKamaData(data=updatedData)
+
+  # Volatility indicators
+  updatedData = AddBBandsData(data=updatedData)
+
+  # Volume indicators
+  updatedData = AddCMFData(data=updatedData)
 
 
   return updatedData
@@ -533,5 +541,107 @@ def AddATRIndicator(data: pd.DataFrame) -> pd.DataFrame:
 
   atr = ta.atr(updatedData["midHigh"], updatedData["midLow"], updatedData["midClose"])
   updatedData[key] = atr
+
+  return updatedData
+
+def AddAroonData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  lengthRange = [7, 14, 21]
+
+  for lr in lengthRange:
+    updatedData = AddAroonIndicator(data=updatedData, length=lr)
+
+  return updatedData
+
+def AddAroonIndicator(data: pd.DataFrame, length: int) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  keySuffix = "{0}".format(length)
+  aroonUKey = "aroonu_{0}".format(keySuffix)
+  aroonDKey = "aroond_{0}".format(keySuffix)
+
+  aroon = ta.aroon(updatedData["midHigh"], updatedData["midLow"], length)
+  updatedData[aroonUKey] = aroon["AROONU_" + keySuffix]
+  updatedData[aroonDKey] = aroon["AROOND_" + keySuffix]
+
+  updatedData["bull_signal_aroon_{0}".format(keySuffix)] = updatedData[aroonUKey] > 80
+  updatedData["bear_signal_aroon_{0}".format(keySuffix)] = updatedData[aroonDKey] > 80
+
+  return updatedData
+
+def AddKamaData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  fastRange = range(5, 21, 5)
+  slowRange = range(10, 31, 10)
+  periodRange = [7, 14, 26, 52]
+
+  for fr in fastRange:
+    for sr in slowRange:
+        for per in periodRange:
+          updatedData = AddKamaIndicator(data=updatedData, fast=fr, slow=sr, period=per)
+
+  return updatedData
+
+def AddKamaIndicator(data: pd.DataFrame, fast: int, slow: int, period: int) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  key = "kama_{0}_{1}_{2}".format(fast, slow, period)
+
+  kama = ta.kama(updatedData["midClose"], period, fast, slow)
+  updatedData[key] = kama
+
+  updatedData["bull_signal_{0}".format(key)] = (updatedData[key] > updatedData["midClose"]) & \
+    (updatedData[key].shift(1) < updatedData["midClose"].shift(1))
+
+  updatedData["bear_signal_{0}".format(key)] = (updatedData[key] < updatedData["midClose"]) & \
+    (updatedData[key].shift(1) > updatedData["midClose"].shift(1))
+
+  return updatedData
+
+def AddBBandsData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  bollRange = range(5, 20, 5)
+
+  for br in bollRange:
+    updatedData = AddBBandsIndicator(data=updatedData, movingAverage=br)
+
+  return updatedData
+
+def AddBBandsIndicator(data: pd.DataFrame, movingAverage: int) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  keySuffix = "{0}".format(movingAverage)
+  bbandsLKey = "bbandsl_{0}".format(keySuffix)
+  bbandsMKey = "bbandsm_{0}".format(keySuffix)
+  bbandsUKey = "bbandsu_{0}".format(keySuffix)
+
+  bb = ta.bbands(updatedData["midClose"], movingAverage, 2)
+  updatedData[bbandsLKey] = bb["BBL_{0}_2.0".format(keySuffix)]
+  updatedData[bbandsMKey] = bb["BBM_{0}_2.0".format(keySuffix)]
+  updatedData[bbandsUKey] = bb["BBU_{0}_2.0".format(keySuffix)]
+
+  updatedData["bull_signal_bbands_{0}".format(keySuffix)] = (updatedData["midClose"] > updatedData[bbandsMKey]) & \
+    (updatedData["midClose"].shift(1) < updatedData[bbandsMKey].shift(1))
+
+  updatedData["bear_signal_bbands_{0}".format(keySuffix)] = (updatedData["midClose"] < updatedData[bbandsMKey]) & \
+    (updatedData["midClose"].shift(1) > updatedData[bbandsMKey].shift(1))
+
+  return updatedData
+
+def AddCMFData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = AddCMFIndicator(data=data)
+
+  return updatedData
+
+def AddCMFIndicator(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  key = "cmf"
+
+  cmf = ta.cmf(updatedData["midHigh"], updatedData["midLow"], updatedData["midClose"], updatedData["volume"])
+  updatedData["cmf"] = cmf
 
   return updatedData
