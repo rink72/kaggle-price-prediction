@@ -27,6 +27,12 @@ def AddIndicators(data: pd.DataFrame) -> pd.DataFrame:
   updatedData = AddSlopeData(data=updatedData)
   updatedData = AddSMIData(data=updatedData)
 
+  # TPSL indicators
+  updatedData = AddATRData(data=updatedData)
+
+  # Trend indicators
+
+
   return updatedData
 
 def AddAOData(data: pd.DataFrame) -> pd.DataFrame:
@@ -512,5 +518,20 @@ def AddSMIIndicator(data: pd.DataFrame, fast: int, slow: int, signal: int) -> pd
 
   updatedData["bear_signal_{0}".format(smiKey)] = (updatedData[smiKey] < updatedData[smiSKey]) & \
     (updatedData[smiKey].shift(1) > updatedData[smiSKey].shift(1))
+
+  return updatedData
+
+def AddATRData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = AddATRIndicator(data=data)
+
+  return updatedData
+
+def AddATRIndicator(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  key = "atr"
+
+  atr = ta.atr(updatedData["midHigh"], updatedData["midLow"], updatedData["midClose"])
+  updatedData[key] = atr
 
   return updatedData
