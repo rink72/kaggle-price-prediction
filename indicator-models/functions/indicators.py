@@ -25,6 +25,7 @@ def AddIndicators(data: pd.DataFrame) -> pd.DataFrame:
   updatedData = AddROCData(data=updatedData)
   updatedData = AddRSIData(data=updatedData)
   updatedData = AddSlopeData(data=updatedData)
+  updatedData = AddSMIData(data=updatedData)
 
   return updatedData
 
@@ -475,5 +476,41 @@ def AddSlopeIndicator(data: pd.DataFrame, slope: int) -> pd.DataFrame:
 
   updatedData["bear_signal_{0}".format(key)] = (updatedData[key] < 0) & \
     (updatedData[key].shift(1) >= 0)
+
+  return updatedData
+
+def AddSMIData(data: pd.DataFrame) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  fastRange = [2, 5, 12]
+  slowRange = [13, 20, 30]
+  signalRange = [2, 5, 12]
+
+  for fr in fastRange:
+    for sr in slowRange:
+        for sigr in signalRange:
+          if (fr < sr) & (sigr < fr):
+            updatedData = AddSMIIndicator(data=updatedData, fast=fr, slow=sr, signal=sigr)
+
+  return updatedData
+
+def AddSMIIndicator(data: pd.DataFrame, fast: int, slow: int, signal: int) -> pd.DataFrame:
+  updatedData = data.copy()
+
+  keySuffix = "{0}_{1}_{2}".format(fast, slow, signal)
+  smiKey = "smi_{0}".format(keySuffix)
+  smiSKey = "smis_{0}".format(keySuffix)
+  smiOKey = "smio_{0}".format(keySuffix)
+
+  smi = ta.smi(updatedData['midClose'], fast, slow, signal)
+  updatedData[smiKey] = smi["SMI_" + keySuffix]
+  updatedData[smiSKey] = smi["SMIs_" + keySuffix]
+  updatedData[smiOKey] = smi["SMIo_" + keySuffix]
+
+  updatedData["bull_signal_{0}".format(smiKey)] = (updatedData[smiKey] > updatedData[smiSKey]) & \
+    (updatedData[smiKey].shift(1) < updatedData[smiSKey].shift(1))
+
+  updatedData["bear_signal_{0}".format(smiKey)] = (updatedData[smiKey] < updatedData[smiSKey]) & \
+    (updatedData[smiKey].shift(1) > updatedData[smiSKey].shift(1))
 
   return updatedData
